@@ -29,6 +29,7 @@ class ViewController: UIViewController, UICollectionViewDelegate, UICollectionVi
         return 10
     }
     
+    //こちらでボタンのスタイル等を変えていく
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         let cell = calcCollectionView.dequeueReusableCell(withReuseIdentifier: "cellId", for: indexPath) as! CalcViewCell
         cell.numberLabel.text = numbers[indexPath.section][indexPath.row]
