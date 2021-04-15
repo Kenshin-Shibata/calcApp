@@ -79,7 +79,7 @@ class ViewController: UIViewController, UICollectionViewDelegate, UICollectionVi
                 
                 numberLabel.text = String(firstNum + secondNum)
             case "C":
-                clear()
+                clear() 
             default:
                 break
             }
