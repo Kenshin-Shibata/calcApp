@@ -7,7 +7,51 @@
 
 import UIKit
 
-class ViewController: UIViewController, UICollectionViewDelegate, UICollectionViewDataSource, UICollectionViewDelegateFlowLayout {
+class ViewController: UIViewController {
+    enum CalcStatus {
+        case none, plus, minus, multiplication, division
+    }
+    
+    var firstNumber = ""
+    var secondNumber = ""
+    var calcStatus: CalcStatus = .none
+    
+    let numbers = [
+        ["C","%","$","+"],
+        ["7","8","9","×"],
+        ["4","5","6","-"],
+        ["1","2","3","+"],
+        ["0",".","="],
+    ]
+    
+    @IBOutlet weak var calcHeightConstrait: NSLayoutConstraint!
+    @IBOutlet weak var numberLabel: UILabel!
+    @IBOutlet weak var calcCollectionView: UICollectionView!
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        
+        
+        calcCollectionView.delegate = self
+        calcCollectionView.dataSource = self
+        calcCollectionView.register(CalcViewCell.self, forCellWithReuseIdentifier: "cellId")
+        calcHeightConstrait.constant = view.frame.width * 1.4
+        calcCollectionView.backgroundColor = .clear
+        calcCollectionView.contentInset = .init(top: 0, left: 14, bottom: 0, right: 14)
+        
+        view.backgroundColor = .black
+    }
+
+    
+    func clear(){
+        firstNumber = ""
+        numberLabel.text = "0"
+        calcStatus = .none
+    }
+
+}
+
+extension ViewController:  UICollectionViewDelegate, UICollectionViewDataSource, UICollectionViewDelegateFlowLayout {
+    
     func numberOfSections(in collectionView: UICollectionView) -> Int {
         return numbers.count
     }
@@ -55,74 +99,56 @@ class ViewController: UIViewController, UICollectionViewDelegate, UICollectionVi
     
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
         let number = numbers[indexPath.section][indexPath.row]
-        if calcStatus == .none {
+        
+        switch calcStatus {
+        case .none:
             switch number {
             case "0"..."9":
-                numberLabel.text = number
+                firstNumber += number
+                numberLabel.text = firstNumber
             case "+":
                 firstNumber = numberLabel.text ?? ""
                 calcStatus = .plus
+            case "-":
+                calcStatus = .minus
+            case "×":
+                calcStatus = .multiplication
+            case "÷":
+                calcStatus = .division
             case "C":
                 clear()
             default:
                break
             }
-        } else if calcStatus == .plus {
+        case .plus, .minus, .multiplication, .division:
             switch number {
             case "0"..."9":
-                numberLabel.text = number
+                secondNumber = number
+                numberLabel.text = secondNumber
             case "=":
-                secondNumber = numberLabel.text ?? ""
-                
                 let firstNum = Double(firstNumber) ?? 0
                 let secondNum = Double(secondNumber) ?? 0
                 
-                numberLabel.text = String(firstNum + secondNum)
+                switch calcStatus {
+                case .plus:
+                    numberLabel.text = String(firstNum + secondNum)
+                case .minus:
+                    numberLabel.text = String(firstNum - secondNum)
+                case .multiplication:
+                    numberLabel.text = String(firstNum * secondNum)
+                case .division:
+                    numberLabel.text = String(firstNum / secondNum)
+                default:
+                    break
+                }
+
             case "C":
-                clear() 
+                clear()
             default:
                 break
             }
         }
     }
-    
-    func clear(){
-        numberLabel.text = "0"
-        calcStatus = .none
-    }
-    enum CalcStatus {
-        case none, plus
-    }
-    
-    var firstNumber = ""
-    var secondNumber = ""
-    var calcStatus: CalcStatus = .none
-    
-    let numbers = [
-        ["C","%","$","+"],
-        ["7","8","9","×"],
-        ["4","5","6","-"],
-        ["1","2","3","+"],
-        ["0",".","="],
-    ]
-    
-    @IBOutlet weak var calcHeightConstrait: NSLayoutConstraint!
-    @IBOutlet weak var numberLabel: UILabel!
-    @IBOutlet weak var calcCollectionView: UICollectionView!
-    override func viewDidLoad() {
-        super.viewDidLoad()
-        
-        
-        calcCollectionView.delegate = self
-        calcCollectionView.dataSource = self
-        calcCollectionView.register(CalcViewCell.self, forCellWithReuseIdentifier: "cellId")
-        calcHeightConstrait.constant = view.frame.width * 1.4
-        calcCollectionView.backgroundColor = .clear
-        calcCollectionView.contentInset = .init(top: 0, left: 14, bottom: 0, right: 14)
-        
-        view.backgroundColor = .black
-    }
-
 }
 
 class CalcViewCell: UICollectionViewCell {
