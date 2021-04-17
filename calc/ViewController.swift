@@ -17,7 +17,7 @@ class ViewController: UIViewController {
     var calcStatus: CalcStatus = .none
     
     let numbers = [
-        ["C","%","$","+"],
+        ["C","%","$","÷"],
         ["7","8","9","×"],
         ["4","5","6","-"],
         ["1","2","3","+"],
@@ -38,6 +38,7 @@ class ViewController: UIViewController {
         calcCollectionView.backgroundColor = .clear
         calcCollectionView.contentInset = .init(top: 0, left: 14, bottom: 0, right: 14)
         
+        numberLabel.text = "0"
         view.backgroundColor = .black
     }
 
@@ -106,6 +107,15 @@ extension ViewController:  UICollectionViewDelegate, UICollectionViewDataSource,
             case "0"..."9":
                 firstNumber += number
                 numberLabel.text = firstNumber
+            
+                if firstNumber.hasPrefix("0") {
+                    firstNumber = ""
+                }
+            case ".":
+                if !confirmIncludeDecimalPoint(numberString: firstNumber) {
+                    firstNumber += number
+                    numberLabel.text = firstNumber
+                }
             case "+":
                 firstNumber = numberLabel.text ?? ""
                 calcStatus = .plus
@@ -123,25 +133,48 @@ extension ViewController:  UICollectionViewDelegate, UICollectionViewDataSource,
         case .plus, .minus, .multiplication, .division:
             switch number {
             case "0"..."9":
-                secondNumber = number
+                secondNumber += number
                 numberLabel.text = secondNumber
+                
+                if secondNumber.hasPrefix("0") {
+                    secondNumber = ""
+                }
+
+            case ".":
+                if !confirmIncludeDecimalPoint(numberString: secondNumber){
+                    secondNumber += number
+                    numberLabel.text = secondNumber
+                }
             case "=":
                 let firstNum = Double(firstNumber) ?? 0
                 let secondNum = Double(secondNumber) ?? 0
                 
+                var resultString: String?
                 switch calcStatus {
                 case .plus:
-                    numberLabel.text = String(firstNum + secondNum)
+                    resultString = String(firstNum + secondNum)
                 case .minus:
-                    numberLabel.text = String(firstNum - secondNum)
+                    resultString = String(firstNum - secondNum)
                 case .multiplication:
-                    numberLabel.text = String(firstNum * secondNum)
+                    resultString = String(firstNum * secondNum)
                 case .division:
-                    numberLabel.text = String(firstNum / secondNum)
+                    resultString = String(firstNum / secondNum)
                 default:
                     break
                 }
-
+                
+                if let result = resultString, result.hasSuffix(".0"){
+                    resultString = result.replacingOccurrences(of: ".0", with: "")
+                }
+                
+                numberLabel.text = resultString
+                firstNumber = ""
+                secondNumber = ""
+                
+                firstNumber += resultString ?? ""
+                calcStatus = .none
+                
+                
             case "C":
                 clear()
             default:
@@ -149,9 +182,27 @@ extension ViewController:  UICollectionViewDelegate, UICollectionViewDataSource,
             }
         }
     }
+    
+    private func confirmIncludeDecimalPoint(numberString: String) -> Bool {
+        if numberString.range(of: ".") != nil || numberString.count == 0{
+            return true
+        } else {
+            return false
+        }
+    }
 }
 
 class CalcViewCell: UICollectionViewCell {
+    
+    override var isHighlighted: Bool {
+        didSet {
+            if isHighlighted {
+                self.numberLabel.alpha = 0.3
+            } else {
+                self.numberLabel.alpha = 1
+            }
+        }
+    }
     
     let numberLabel: UILabel = {
        let label = UILabel()
